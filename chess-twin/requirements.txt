@@ -1,0 +1,15 @@
+torch
+python-chess
+numpy
+pyyaml
+pandas
+scikit-learn
+pydantic
+tqdm
+pytest 
+tensorboard
+datasets
+onnxruntime
+onnxscripts
+uvicorn
+fastapi

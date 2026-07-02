@@ -1,0 +1,49 @@
+project:
+  name: chess-twin
+  seed: 42
+
+player:
+  username: "ZenHustler237"                 # target player's chess.com handle — fill in
+  time_control: "rapid"          # decision 3: rapid-first
+  recency_cutoff_months: 24    # decision 2: define "current style"
+
+data:
+  raw_dir: data/raw
+  processed_dir: data/processed
+  split: by_game_and_time      # decision 8: never split positions randomly
+  test_fraction: 0.1           # held out as MOST RECENT games
+  val_fraction: 0.1
+
+encoding:
+  move_vocab: from_to          # decision 5: from-to + promotions (~4544)
+  num_board_planes: 17 # Revisited in phase 3. Use of canonicalization, we only need one color so stm isn't considered and I still don't know why clock ain't there
+                      #19         # 12 piece + 4 castle + en-passant(ep) + side-to-move(stm) + clock(rapid vs blitz) (revisit in phase 3)
+
+model:
+  trunk: resnet
+  num_blocks: 8                # sized down for your data volume
+  num_filters: 96
+
+training:
+  device: auto                 # resolves to mps on MacBook M4
+  batch_size: 256              # mind the 16GB unified memory
+  optimizer: adam
+  lr: 0.001
+  epochs: 50
+  early_stop_metric: val_loss # val_top1_move_match
+  patience: 5
+
+transfer:
+  pretrain: true               # decision 7: pretrain-then-fine-tune
+  pretrain_rating_band: [2200, 2600]   # set around target's rating in phase 6
+  finetune_lr_factor: 0.1
+
+eval_:
+  stockfish_path: /opt/homebrew/bin/stockfish
+  analysis_depth: 20          # shallow but sufficient to classify blunders
+  blunder_threshold_cp: 200
+
+serving:
+  artifact_format: onnx
+  latency_budget_ms: 50
+  model_version: v1.0
